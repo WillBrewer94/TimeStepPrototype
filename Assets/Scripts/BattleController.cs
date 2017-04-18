@@ -15,9 +15,15 @@ public class BattleController : MonoBehaviour {
 
     //Battle UI
     public Text turnText;
+    public Text playerHealth;
+    public Text currAttack;
     public GameObject blinkCursor;
     public GameObject areaAttack;
     public GameObject lineAttack;
+
+    //This is messy plz dont look
+    public GameObject slamAreaPrefab;
+    public GameObject slamArea;
 
     //Characters
     public GameObject player;
@@ -26,10 +32,11 @@ public class BattleController : MonoBehaviour {
     //Delta time values for gameobjects
     public float playerDeltaTarget = 0;
     public float playerDelta = 0;
-    public float enemyDelta;
+    public float enemyDelta = 0;
+    public float enemyDeltaTarget = 0;
     public float pauseSmoothTime = 0.5f;
-    public float timer = 1;
-    public float turnTime = 1;
+    public float timer;
+    public float turnTime;
 
     //Is Time Paused
     public bool isPause = false;
@@ -46,23 +53,59 @@ public class BattleController : MonoBehaviour {
     void Start() {
         player = GameObject.FindGameObjectWithTag("Player");
         lineRender = GetComponent<LineRenderer>();
+        timer = turnTime;
+        player.GetComponent<Player>().ToggleGravity();
     }
 
     void Update() {
+        //Set UI health
+        playerHealth.text = "Health: " + player.GetComponent<Player>().GetHealth() + "/3";
+        currAttack.text = player.GetComponent<Player>().GetCurrAttack();
+
         if(isPause) {
             //Stop animations and player movement
             turnText.text = "Player Turn";
             player.GetComponent<Animator>().speed = 0;
             Mathf.SmoothDamp(playerDelta, playerDeltaTarget, ref playerDelta, pauseSmoothTime);
 
-            //Move Blink Cursor
-            blinkCursor.SetActive(true);
-            blinkCursor.transform.Translate(player.GetComponent<Player>().dirInput * Time.deltaTime * cursorSpeed);
+            //Show or Hide Attack UI
+            string currAttack = player.GetComponent<Player>().GetCurrAttack();
 
-            //Draw Line
-            lineRender.enabled = true;
-            lineRender.SetPosition(0, player.GetComponent<BoxCollider2D>().bounds.center);
-            lineRender.SetPosition(1, blinkCursor.GetComponent<BoxCollider2D>().bounds.center);
+            if(currAttack.Equals("Blink")) {
+                //Move Blink Cursor
+                blinkCursor.SetActive(true);
+                lineRender.enabled = true;
+
+                //Draw Line
+                lineRender.enabled = true;
+                lineRender.SetPosition(0, player.GetComponent<BoxCollider2D>().bounds.center);
+                lineRender.SetPosition(1, blinkCursor.GetComponent<BoxCollider2D>().bounds.center);
+
+                blinkCursor.transform.Translate(player.GetComponent<Player>().dirInput * Time.deltaTime * cursorSpeed);
+
+                if(slamArea) {
+                    Destroy(slamArea);
+                    GameObject[] enemyList = GetEnemyList();
+
+                    foreach(GameObject enemy in enemyList) {
+                        enemy.GetComponent<Enemy>().isCollide = false;
+                    }
+                }
+
+            } else if(currAttack.Equals("Slam")) {
+                blinkCursor.SetActive(false);
+                lineRender.enabled = false;
+                
+                //This is the messiest method in the history of methods, maybe ever.
+                //Change it dumbass.
+                if(!slamArea) {
+                    Vector2 playerPos = player.transform.position;
+                    playerPos.x += 0.3f;
+                    playerPos.y -= 0.4f;
+
+                    slamArea = Instantiate(slamAreaPrefab, playerPos, Quaternion.identity);
+                } 
+            }
 
         } else {
             //Start animations and player movement
@@ -70,8 +113,8 @@ public class BattleController : MonoBehaviour {
             turnText.text = timer.ToString("F2");
             player.GetComponent<Animator>().speed = 1;
 
-            //Run timer until 2 seconds have passed, then pause again
-            Countdown();
+            //Execute active turn code
+            ActiveTurn();
 
             //Hide Line and Cursor
             lineRender.enabled = false;
@@ -92,13 +135,6 @@ public class BattleController : MonoBehaviour {
     //Switches pause state and runs relevant code
     public void SwitchPause() {
         isPause = !isPause;
-
-        //Run logic for enemies
-        GameObject[] enemies = GetEnemyList();
-
-        foreach(GameObject enemy in enemies) {
-            enemy.GetComponent<Enemy>().OnPause();
-        }
     }
 
     //====================================================
@@ -106,12 +142,50 @@ public class BattleController : MonoBehaviour {
     //====================================================
 
     //Countdown timer for x seconds, stored in the timer variable
-    public void Countdown() {
+    public void ActiveTurn() {
         if(timer > 0) {
+            //THIS CODE ACTIVATES DURING ACTIVE TURN
+
             timer -= Time.deltaTime;
+            
+
+            GameObject[] enemies = GetEnemyList();
+
+            //Move enemy if lineAttack chosen
+            float step = 30 * Time.deltaTime;
+
+            foreach(GameObject enemy in enemies) {
+                if(enemy.GetComponent<Enemy>().isMoving) {
+                    enemy.transform.position = Vector2.MoveTowards(enemy.transform.position, enemy.GetComponent<Enemy>().attackPath.GetPosition(1), step);
+                }
+            }
+
         } else {
             isPause = true;
             timer = turnTime;
+
+            //THIS CODE ACTIVATES AT END OF ACTIVE TURN
+
+            Player p = player.GetComponent<Player>();
+
+            //Run logic for hurting player
+            if(player.GetComponent<Player>().isCollide) {
+                player.GetComponent<Player>().SetHealth(p.GetComponent<Player>().GetHealth() - 1);
+            }
+
+            //Remove attack objects from previous turn, stored as current attack in each enemy
+            GameObject[] gameObjects = GameObject.FindGameObjectsWithTag("Enemy");
+
+            foreach(GameObject gameObject in gameObjects) {
+                Destroy(gameObject.GetComponent<Enemy>().GetAttack());
+            }
+
+            //Run OnPause logic for enemies
+            GameObject[] enemies = GetEnemyList();
+
+            foreach(GameObject enemy in enemies) {
+                enemy.GetComponent<Enemy>().OnPause();
+            }
         }
     }
 
@@ -130,19 +204,5 @@ public class BattleController : MonoBehaviour {
         float y = player.GetComponent<BoxCollider2D>().bounds.center.y + 8 * Mathf.Sin(player.GetComponent<Player>().joyAngle);
 
         lineRender.SetPosition(1, new Vector2(x, y));
-    }
-
-    //====================================================
-    //                  Enemy Attacks                    =
-    //====================================================
-    
-    //Run logic for area attack collisions, spawning, and despawning
-    public void AreaAttack() {
-
-    }
-
-    //Run logic for line attack collisions, spawning, and despawning
-    public void LineAttack() {
-
     }
 }

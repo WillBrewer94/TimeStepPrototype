@@ -29,8 +29,8 @@ public class PlayerInput : MonoBehaviour {
             player.OnCircleInputDown();
         }
 
-        if(Input.GetKeyDown(KeyCode.LeftShift)) {
-
+        if(Input.GetButtonDown("Square") || Input.GetKeyDown(KeyCode.LeftShift)) {
+            player.OnSquareInputDown();
         }
     }
 

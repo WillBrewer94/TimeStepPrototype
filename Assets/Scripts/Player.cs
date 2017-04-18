@@ -6,11 +6,12 @@ using UnityEngine.SceneManagement;
 public class Player : MonoBehaviour {
     public float playerDeltaTime;
 
-    //public Vector2 moveDir = new Vector2(0, 1);
+    //Components
     GameObject checkpoint;
     Animator anim;
     SpriteRenderer sprite;
 
+    //Platforming Config Values
     public bool isVariableJump = false;
     public int maxJump = 1;
     public int jumps = 0;
@@ -32,7 +33,7 @@ public class Player : MonoBehaviour {
 
     //Calculated Values
     public Vector2 velocity;
-    float gravity;
+    public float gravity;
     float maxJumpVelocity;
     float minJumpVelocity;
     float velocityXSmoothing;
@@ -44,6 +45,12 @@ public class Player : MonoBehaviour {
     public float joyAngle;
     public Vector2 telePos;
 
+    //Player Variables
+    public bool isCollide;
+    public int health = 3;
+    public string[] attacks = { "Blink", "Slam" };
+    public string currAttack;
+
     // Use this for initialization
     void Start() {
         controller = GetComponent<Controller2D>();
@@ -53,6 +60,8 @@ public class Player : MonoBehaviour {
         gravity = -(2 * maxJumpHeight) / Mathf.Pow(timeToJumpApex, 2);
         maxJumpVelocity = Mathf.Abs(gravity) * timeToJumpApex;
         minJumpVelocity = Mathf.Sqrt(2 * Mathf.Abs(gravity) * minJumpHeight);
+
+        currAttack = attacks[0];
     }
 
     void Update() {
@@ -123,9 +132,12 @@ public class Player : MonoBehaviour {
     public void OnCircleInputDown() {
         //Execute move chosen
         if(BattleController.Shared().IsPaused()) {
-            transform.position = GameObject.FindGameObjectWithTag("BlinkCursor").transform.position;
-            velocity.x = 0;
-            velocity.y = 0;
+
+            if(currAttack.Equals("Blink")) {
+                Blink();
+            } else if(currAttack.Equals("Slam")) {
+                Slam();
+            }
 
             BattleController.Shared().SwitchPause();
         }
@@ -133,6 +145,10 @@ public class Player : MonoBehaviour {
 
     public void OnCircleInputUp() {
 
+    }
+
+    public void OnSquareInputDown() {
+        ToggleAttack();
     }
 
     void CalculateVelocity() {
@@ -167,5 +183,73 @@ public class Player : MonoBehaviour {
                 timeToWallUnstick = wallStickTime;
             }
         }
+    }
+
+    public void OnTriggerEnter2D(Collider2D collision) {
+        if(collision.gameObject.tag == "Attack") {
+            isCollide = true;
+            Debug.Log("Enter");
+        }
+    }
+
+    public void OnTriggerExit2D(Collider2D collision) {
+        isCollide = false;
+        Debug.Log("Exit");
+    }
+
+    public void SetHealth(int health) {
+        this.health = health;
+
+        if(health < 1) {
+            SceneManager.LoadScene(0);
+        }
+    }
+
+    public int GetHealth() {
+        return health;
+    }
+
+    public void ToggleGravity() {
+        if(gravity == 0) {
+            gravity = -81;
+        } else {
+            gravity = 0;
+        }
+    }
+
+    //====================================================
+    //                  Player Attacks                   =
+    //====================================================
+
+    public void Blink() {
+        transform.position = GameObject.FindGameObjectWithTag("BlinkCursor").transform.position;
+        velocity.x = 0;
+        velocity.y = 0;
+    }
+
+    public void Slam() {
+        GameObject[] enemies = BattleController.Shared().GetEnemyList();
+
+        foreach(GameObject enemy in enemies) {
+            if(enemy.GetComponent<Enemy>().isCollide) {
+                //Get direction of enemy from player
+                enemy.GetComponent<Rigidbody2D>().AddForce(enemy.transform.position - transform.position * 10 * Time.deltaTime);
+
+                //Move enemy away from player
+                StartCoroutine(enemy.GetComponent<Enemy>().Slammed(transform.position, new Vector2(-100, -100)));
+            }
+        }
+    }
+
+    public void ToggleAttack() {
+        if(currAttack.Equals("Blink")) {
+            currAttack = "Slam";
+        } else if(currAttack.Equals("Slam")) {
+            currAttack = "Blink";
+        }
+    }
+
+    public string GetCurrAttack() {
+        return currAttack;
     }
 }
