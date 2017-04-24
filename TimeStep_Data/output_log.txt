@@ -1,0 +1,35 @@
+Initialize engine version: 5.5.0f3 (38b4efef76f0)
+GfxDevice: creating device client; threaded=1
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.0]
+    Renderer: Intel(R) HD Graphics Family (ID=0xa16)
+    Vendor:   Intel
+    VRAM:     1109 MB
+    Driver:   20.19.15.4531
+Begin MonoManager ReloadAssembly
+Platform assembly: C:\Users\Will\Documents\GitHub\TimeStepPrototype\TimeStep_Data\Managed\UnityEngine.dll (this message is harmless)
+Loading C:\Users\Will\Documents\GitHub\TimeStepPrototype\TimeStep_Data\Managed\UnityEngine.dll into Unity Child Domain
+Platform assembly: C:\Users\Will\Documents\GitHub\TimeStepPrototype\TimeStep_Data\Managed\Assembly-CSharp.dll (this message is harmless)
+Loading C:\Users\Will\Documents\GitHub\TimeStepPrototype\TimeStep_Data\Managed\Assembly-CSharp.dll into Unity Child Domain
+Platform assembly: C:\Users\Will\Documents\GitHub\TimeStepPrototype\TimeStep_Data\Managed\UnityEngine.UI.dll (this message is harmless)
+Loading C:\Users\Will\Documents\GitHub\TimeStepPrototype\TimeStep_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
+Platform assembly: C:\Users\Will\Documents\GitHub\TimeStepPrototype\TimeStep_Data\Managed\UnityEngine.Networking.dll (this message is harmless)
+Loading C:\Users\Will\Documents\GitHub\TimeStepPrototype\TimeStep_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
+Platform assembly: C:\Users\Will\Documents\GitHub\TimeStepPrototype\TimeStep_Data\Managed\UnityEngine.PlaymodeTestsRunner.dll (this message is harmless)
+Loading C:\Users\Will\Documents\GitHub\TimeStepPrototype\TimeStep_Data\Managed\UnityEngine.PlaymodeTestsRunner.dll into Unity Child Domain
+- Completed reload, in  0.034 seconds
+Platform assembly: C:\Users\Will\Documents\GitHub\TimeStepPrototype\TimeStep_Data\Managed\System.Core.dll (this message is harmless)
+Platform assembly: C:\Users\Will\Documents\GitHub\TimeStepPrototype\TimeStep_Data\Managed\System.dll (this message is harmless)
+desktop: 1600x900 50Hz; virtual: 1600x900 at 0,0
+<RI> Initializing input.
+<RI> Input initialized.
+<RI> Initialized touch support.
+UnloadTime: 2.594480 ms
+Unloading 4 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 4.848920 ms
+
+Unloading 3 unused Assets to reduce memory usage. Loaded Objects now: 468.
+Total: 0.252575 ms (FindLiveObjects: 0.043285 ms CreateObjectMapping: 0.020081 ms MarkObjects: 0.183853 ms  DeleteObjects: 0.004462 ms)
+
+Setting up 1 worker threads for Enlighten.
+  Thread -> id: 33bc -> priority: 1 

@@ -197,6 +197,12 @@ public class Player : MonoBehaviour {
         Debug.Log("Exit");
     }
 
+    public void OnCollisionEnter2D(Collision2D collision) {
+        if(collision.collider.tag == "Enemy") {
+            SetHealth(health - 1);
+        }
+    }
+
     public void SetHealth(int health) {
         this.health = health;
 
@@ -235,8 +241,11 @@ public class Player : MonoBehaviour {
                 //Get direction of enemy from player
                 enemy.GetComponent<Rigidbody2D>().AddForce(enemy.transform.position - transform.position * 10 * Time.deltaTime);
 
-                //Move enemy away from player
-                StartCoroutine(enemy.GetComponent<Enemy>().Slammed(transform.position, new Vector2(-100, -100)));
+                Enemy enemyScript = enemy.GetComponent<Enemy>();
+                enemyScript.SetHealth(enemyScript.GetHealth() - 1);
+                enemyScript.isMoving = false;
+
+                enemy.transform.position = new Vector2(2, 0);
             }
         }
     }

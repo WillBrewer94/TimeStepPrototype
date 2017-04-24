@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Collections;
 using UnityEngine.UI;
 
@@ -10,12 +11,10 @@ public class BattleController : MonoBehaviour {
     //Configuration Values
     public float cursorSpeed = 10;
 
-    //Components
-    public LineRenderer lineRender;
-
     //Battle UI
     public Text turnText;
     public Text playerHealth;
+    public Text enemyHealth;
     public Text currAttack;
     public GameObject blinkCursor;
     public GameObject areaAttack;
@@ -52,14 +51,19 @@ public class BattleController : MonoBehaviour {
 
     void Start() {
         player = GameObject.FindGameObjectWithTag("Player");
-        lineRender = GetComponent<LineRenderer>();
         timer = turnTime;
         player.GetComponent<Player>().ToggleGravity();
     }
 
     void Update() {
+        //check win condition
+        if(GetEnemyList().Length < 1) {
+            SceneManager.LoadScene("Win");
+        }
+
         //Set UI health
         playerHealth.text = "Health: " + player.GetComponent<Player>().GetHealth() + "/3";
+        enemyHealth.text = "Enemy Health: " + GameObject.FindGameObjectWithTag("Enemy").GetComponent<Enemy>().GetHealth() + "/2";
         currAttack.text = player.GetComponent<Player>().GetCurrAttack();
 
         if(isPause) {
@@ -74,13 +78,6 @@ public class BattleController : MonoBehaviour {
             if(currAttack.Equals("Blink")) {
                 //Move Blink Cursor
                 blinkCursor.SetActive(true);
-                lineRender.enabled = true;
-
-                //Draw Line
-                lineRender.enabled = true;
-                lineRender.SetPosition(0, player.GetComponent<BoxCollider2D>().bounds.center);
-                lineRender.SetPosition(1, blinkCursor.GetComponent<BoxCollider2D>().bounds.center);
-
                 blinkCursor.transform.Translate(player.GetComponent<Player>().dirInput * Time.deltaTime * cursorSpeed);
 
                 if(slamArea) {
@@ -94,7 +91,6 @@ public class BattleController : MonoBehaviour {
 
             } else if(currAttack.Equals("Slam")) {
                 blinkCursor.SetActive(false);
-                lineRender.enabled = false;
                 
                 //This is the messiest method in the history of methods, maybe ever.
                 //Change it dumbass.
@@ -117,7 +113,6 @@ public class BattleController : MonoBehaviour {
             ActiveTurn();
 
             //Hide Line and Cursor
-            lineRender.enabled = false;
             blinkCursor.SetActive(false);
         }
     }
@@ -192,17 +187,5 @@ public class BattleController : MonoBehaviour {
     //Finds all the active enemies on the scene
     public GameObject[] GetEnemyList() {
         return GameObject.FindGameObjectsWithTag("Enemy");
-    }
-
-    //Returns the angle of the line to be drawn by the LineRenderer
-    public void Angle() {
-        lineRender.enabled = true;
-        lineRender.SetPosition(0, player.GetComponent<BoxCollider2D>().bounds.center);
-
-        //Trig Shit
-        float x = player.GetComponent<BoxCollider2D>().bounds.center.x + 8 * Mathf.Cos(player.GetComponent<Player>().joyAngle);
-        float y = player.GetComponent<BoxCollider2D>().bounds.center.y + 8 * Mathf.Sin(player.GetComponent<Player>().joyAngle);
-
-        lineRender.SetPosition(1, new Vector2(x, y));
     }
 }

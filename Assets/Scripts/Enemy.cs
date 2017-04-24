@@ -18,6 +18,7 @@ public class Enemy : MonoBehaviour {
 
     public bool isMoving = false;
     public bool isCollide = false;
+    public int health = 2;
 
 	// Use this for initialization
 	void Start () {
@@ -31,8 +32,7 @@ public class Enemy : MonoBehaviour {
         attackPath.enabled = false;
         isMoving = false;
 
-        //moves[UnityEngine.Random.Range(0, moves.Count)].Invoke();
-        LineAttack();
+        moves[UnityEngine.Random.Range(0, moves.Count)].Invoke();
     }
 
     public GameObject GetAttack() {
@@ -63,8 +63,20 @@ public class Enemy : MonoBehaviour {
             transform.position = Vector3.Lerp(targetPos, startPos, t); // Move objectToMove closer to b
             yield return new WaitForFixedUpdate();         // Leave the routine and return here in the next frame
         }
-        transform.position = startPos;
 
+        transform.position = startPos;
+    }
+
+    public void SetHealth(int health) {
+        this.health = health;
+
+        if(health < 1) {
+            Destroy(gameObject);
+        }
+    }
+
+    public int GetHealth() {
+        return health;
     }
 
     //====================================================
