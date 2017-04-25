@@ -40,6 +40,8 @@ public class BattleController : MonoBehaviour {
     //Is Time Paused
     public bool isPause = false;
 
+    public bool isBattle = false;
+
     void Awake() {
         //Make sure only one battle manager exists at a time
         if(shared == null) {
@@ -53,67 +55,58 @@ public class BattleController : MonoBehaviour {
         player = GameObject.FindGameObjectWithTag("Player");
         timer = turnTime;
         player.GetComponent<Player>().ToggleGravity();
+        ActiveTurn();
     }
 
     void Update() {
-        //check win condition
-        if(GetEnemyList().Length < 1) {
-            SceneManager.LoadScene("Win");
-        }
+        if(isBattle) {
+            if(isPause) {
+                //Stop animations and player movement
+                player.GetComponent<Animator>().speed = 0;
+                Mathf.SmoothDamp(playerDelta, playerDeltaTarget, ref playerDelta, pauseSmoothTime);
 
-        //Set UI health
-        playerHealth.text = "Health: " + player.GetComponent<Player>().GetHealth() + "/3";
-        enemyHealth.text = "Enemy Health: " + GameObject.FindGameObjectWithTag("Enemy").GetComponent<Enemy>().GetHealth() + "/2";
-        currAttack.text = player.GetComponent<Player>().GetCurrAttack();
+                //Show or Hide Attack UI
+                string currAttack = player.GetComponent<Player>().GetCurrAttack();
 
-        if(isPause) {
-            //Stop animations and player movement
-            turnText.text = "Player Turn";
-            player.GetComponent<Animator>().speed = 0;
-            Mathf.SmoothDamp(playerDelta, playerDeltaTarget, ref playerDelta, pauseSmoothTime);
+                if(currAttack.Equals("Blink")) {
+                    //Move Blink Cursor
+                    blinkCursor.SetActive(true);
+                    blinkCursor.transform.Translate(player.GetComponent<Player>().dirInput * Time.deltaTime * cursorSpeed);
 
-            //Show or Hide Attack UI
-            string currAttack = player.GetComponent<Player>().GetCurrAttack();
+                    if(slamArea) {
+                        Destroy(slamArea);
+                        GameObject[] enemyList = GetEnemyList();
 
-            if(currAttack.Equals("Blink")) {
-                //Move Blink Cursor
-                blinkCursor.SetActive(true);
-                blinkCursor.transform.Translate(player.GetComponent<Player>().dirInput * Time.deltaTime * cursorSpeed);
+                        foreach(GameObject enemy in enemyList) {
+                            enemy.GetComponent<Enemy>().isCollide = false;
+                        }
+                    }
 
-                if(slamArea) {
-                    Destroy(slamArea);
-                    GameObject[] enemyList = GetEnemyList();
+                } else if(currAttack.Equals("Slam")) {
+                    blinkCursor.SetActive(false);
 
-                    foreach(GameObject enemy in enemyList) {
-                        enemy.GetComponent<Enemy>().isCollide = false;
+                    //This is the messiest method in the history of methods, maybe ever.
+                    //Change it dumbass.
+                    if(!slamArea) {
+                        Vector2 playerPos = player.transform.position;
+                        playerPos.x += 0.3f;
+                        playerPos.y -= 0.4f;
+
+                        slamArea = Instantiate(slamAreaPrefab, playerPos, Quaternion.identity);
                     }
                 }
 
-            } else if(currAttack.Equals("Slam")) {
+            } else {
+                //Start animations and player movement
+                playerDelta = Time.deltaTime;
+                player.GetComponent<Animator>().speed = 1;
+
+                //Execute active turn code
+                ActiveTurn();
+
+                //Hide Line and Cursor
                 blinkCursor.SetActive(false);
-                
-                //This is the messiest method in the history of methods, maybe ever.
-                //Change it dumbass.
-                if(!slamArea) {
-                    Vector2 playerPos = player.transform.position;
-                    playerPos.x += 0.3f;
-                    playerPos.y -= 0.4f;
-
-                    slamArea = Instantiate(slamAreaPrefab, playerPos, Quaternion.identity);
-                } 
             }
-
-        } else {
-            //Start animations and player movement
-            playerDelta = Time.deltaTime;
-            turnText.text = timer.ToString("F2");
-            player.GetComponent<Animator>().speed = 1;
-
-            //Execute active turn code
-            ActiveTurn();
-
-            //Hide Line and Cursor
-            blinkCursor.SetActive(false);
         }
     }
 
@@ -142,7 +135,6 @@ public class BattleController : MonoBehaviour {
             //THIS CODE ACTIVATES DURING ACTIVE TURN
 
             timer -= Time.deltaTime;
-            
 
             GameObject[] enemies = GetEnemyList();
 

@@ -67,6 +67,7 @@ public class Player : MonoBehaviour {
     void Update() {
         //Delta Time Adjustments
         playerDeltaTime = BattleController.Shared().playerDelta;
+        //playerDeltaTime = Time.deltaTime;
 
         CalculateVelocity();
         HandleWallSliding();
